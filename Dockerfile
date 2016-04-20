@@ -1,9 +1,12 @@
 FROM oracle/oraclelinux
 MAINTAINER Petr Klimenko [petrklim@yandex.ru]
 
-# Install packages. TODO: Move install packages into script with clear
+# Install packages. TODO: Move install packages into separete script with clear
 RUN yum install -y oracle-rdbms-server-12cR1-preinstall
 RUN yum install -y curl unzip
+
+# Init argument
+ARG DISTRIB_URL
 
 # Setup env variables
 ENV ORACLE_INSTALL_GROUP=oinstall \
@@ -19,7 +22,7 @@ ENV ORACLE_BASE=${ORACLE_ROOT}/database \
     ORACLE_INST_LOC_FILE=${ORACLE_USER_HOME}/oraInst.loc
 
 ENV ORACLE_HOME=${ORACLE_BASE}/core \
-    DISTRIB_URL=http://128.68.8.30:8080/database \
+    DISTRIB_URL=${DISTRIB_URL} \
     DISTRIB_FOLDER=/tmp/database
 
 # Some setup for oracle
@@ -29,11 +32,14 @@ RUN mkdir -p ${ORACLE_HOME} && \
     mkdir -p ${ORACLE_INVENTORY_LOCATION} && \
     chown -R ${ORACLE_USER}:${ORACLE_INSTALL_GROUP} ${ORACLE_ROOT}
 
+# Setup who file
 ADD who /usr/bin/
 RUN chmod 755 /usr/bin/who
 
-# Prepare install script
+# Set working directory
 WORKDIR ${ORACLE_USER_HOME}
+
+# Prepare install script
 ADD install.sh .
 RUN chmod a+x install.sh
 
@@ -41,21 +47,20 @@ RUN chmod a+x install.sh
 USER oracle
 RUN ./install.sh
 
+# Run post-install script
 USER root
 RUN ${ORACLE_HOME}/root.sh
 
-# # Copy files
-# WORKDIR ${ORACLE_USER_HOME}
-# ADD files/ files
-# ADD files/envsubst .
-# RUN chmod 755 envsubst
-# RUN ./envsubst ./files/.bashrc > .bashrc
-# RUN ./envsubst ./files/oraInst.loc > ${ORACLE_INST_LOC_FILE}
-# RUN ./envsubst ./files/install.sh > install.sh
-# RUN ./envsubst ./files/run.sh > run.sh
-# RUN chown -R ${ORACLE_USER}:${ORACLE_INSTALL_GROUP} .
-# RUN chmod 755 install.sh
-# RUN chmod 755 run.sh
-#
-# EXPOSE 22 1521
-# CMD ./run.sh
+# Prepare .bashrc and sql scripts
+ADD .bashrc .
+ADD sql/* sql/
+
+# Prepare run script
+ADD run.sh .
+RUN chown -R ${ORACLE_USER}:${ORACLE_INSTALL_GROUP} run.sh && \
+    chmod a+x run.sh
+
+# Run options
+USER oracle
+EXPOSE 1521 22
+CMD bash -l -c "${ORACLE_USER_HOME}/run.sh"

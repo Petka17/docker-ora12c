@@ -47,6 +47,9 @@ ${ORACLE_USER_HOME}/database/runInstaller \
             SECURITY_UPDATES_VIA_MYORACLESUPPORT=false \
             oracle.installer.autoupdates.option=SKIP_UPDATES
 
+echo "->Copy dbca response file"
+cp ${ORACLE_USER_HOME}/database/response/dbca.rsp ${ORACLE_USER_HOME}/
+
 echo "-> Remove distributives"
 rm -fr ${ORACLE_USER_HOME}/database;
 rm -fr ${DISTRIB_FOLDER};
