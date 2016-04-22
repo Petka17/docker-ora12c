@@ -1,7 +1,17 @@
-10.22.114.25
+# Build Oracle Database 12c image
+docker build -t ora12c --build-arg DISTRIB_URL=http://10.22.113.69:8080/database .
 
-dbt ora12c --build-arg DISTRIB_URL=http://10.22.114.25:8080/database .
+# Run data-only container to store database files
+docker run --name dbdata -e COMMAND=data ora12c
 
-docker run -it --name dbdata -e COMMAND=initdb -e SYS_PASSWORD=system -e ORACLE_SID=SIEBELDB -v /oracle/shared ora12c echo "Data container started"
+# Create database
+docker run --rm -it -e COMMAND=initdb --volumes-from dbdata ora12c
 
-docker run -it -e COMMAND=initdb -e SYS_PASSWORD=system -e ORACLE_SID=SIEBELDB --volumes-from dbdata ora12c bash
+# Run database
+docker run -d -it -p 1521:1521 --name db -e COMMAND=rundb --volumes-from dbdata ora12c
+
+# Backup volume
+docker run --rm --volumes-from dbdata -v $(pwd):/backup busybox tar cvf /backup/backup.tar /oracle/shared
+
+# Restore volume
+docker run --rm --volumes-from dbdata -v $(pwd):/backup busybox tar xvf /backup/backup.tar

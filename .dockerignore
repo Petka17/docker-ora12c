@@ -1,3 +1,5 @@
 database*
 build.sh
 .gitignore
+*.tar
+tmp
