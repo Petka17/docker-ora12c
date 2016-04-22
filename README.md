@@ -28,7 +28,7 @@ docker run --rm --volumes-from dbdata -v $(pwd):/backup busybox tar cvf /backup/
 docker run --rm --volumes-from dbdata -v $(pwd):/backup busybox tar xvf /backup/backup.tar
 ```
 
-### Connect to runnig container
+### Connect to running container
 ```
 docker exec -it db bash
 
