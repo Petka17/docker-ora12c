@@ -1,9 +1,9 @@
 FROM oracle/oraclelinux
 MAINTAINER Petr Klimenko [petrklim@yandex.ru]
 
-# Install packages. TODO: Move install packages into separete script with clear
-RUN yum install -y oracle-rdbms-server-12cR1-preinstall
-RUN yum install -y curl unzip
+# Install packages
+ADD packages-install.sh /tmp/
+RUN chmod a+x /tmp/packages-install.sh && /tmp/packages-install.sh
 
 # Init argument
 ARG DISTRIB_URL
